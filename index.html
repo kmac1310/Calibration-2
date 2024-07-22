@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Continuous 1440 Minutes Countdown with Simultaneous Message Display</title>
+    <style>
+        body {
+            background-color: black;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: #4CAF50;
+        }
+        #timer {
+            font-size: 144px;
+        }
+        #unit {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+        #message {
+            font-size: 36px;
+            margin-top: 20px;
+            text-align: center;
+            opacity: 1; /* Make the message fully visible by default */
+        }
+    </style>
+</head>
+<body>
+    <div id="timer">0</div>
+    <div id="unit">nanosecond</div>
+    <div id="message"></div>
+    <script>
+        const units = ['nanosecond', 'microsecond', 'millisecond', 'second', '1440TIME'];
+        let currentUnitIndex = 0;
+        let cycleStartTime;
+        let is1440TimeActive = false;
+        
+        function updateDisplay(updateFunc, duration) {
+            const now = new Date();
+            updateFunc();
+            if (!is1440TimeActive && now - cycleStartTime < duration) {
+                requestAnimationFrame(() => updateDisplay(updateFunc, duration));
+            } else if (!is1440TimeActive) {
+                nextUnit();
+            } else {
+                requestAnimationFrame(() => updateDisplay(updateFunc, Infinity));
+            }
+        }
+
+        function updateNanosecond() {
+            document.getElementById('timer').textContent = Math.floor(Math.random() * 10);
+        }
+        function updateMicrosecond() {
+            document.getElementById('timer').textContent = Math.floor(Math.random() * 10);
+        }
+        function updateMillisecond() {
+            const now = new Date();
+            document.getElementById('timer').textContent = Math.floor(now.getMilliseconds() / 100);
+        }
+        function updateSecond() {
+            const now = new Date();
+            document.getElementById('timer').textContent = now.getSeconds() % 10;
+        }
+        function update1440TIME() {
+            const now = new Date();
+            const minutesPassed = now.getHours() * 60 + now.getMinutes();
+            const minutesLeft = 1440 - minutesPassed;
+            document.getElementById('timer').textContent = minutesLeft.toString().padStart(3, ' ');
+        }
+        function nextUnit() {
+            currentUnitIndex++;
+            if (currentUnitIndex >= units.length) {
+                currentUnitIndex = units.length - 1; // Stay on 1440TIME
+                is1440TimeActive = true;
+                showMessage(); // Show message immediately with 1440TIME
+            }
+            cycleStartTime = new Date();
+            const currentUnit = units[currentUnitIndex];
+            document.getElementById('unit').textContent = currentUnit;
+            
+            let duration;
+            if (['nanosecond', 'microsecond', 'millisecond'].includes(currentUnit)) {
+                duration = 10000; // 10 seconds for nano, micro, and milli
+            } else {
+                duration = 20000; // 20 seconds for second and 1440TIME
+            }
+            
+            const updateFunc = {
+                'nanosecond': updateNanosecond,
+                'microsecond': updateMicrosecond,
+                'millisecond': updateMillisecond,
+                'second': updateSecond,
+                '1440TIME': update1440TIME
+            }[currentUnit];
+            
+            updateDisplay(updateFunc, duration);
+        }
+        
+        function showMessage() {
+            const messageElement = document.getElementById('message');
+            messageElement.innerHTML = "Calibration Completed<br>Welcome to 1440TIME!";
+            messageElement.style.opacity = 1; // Ensure the message is fully visible
+        }
+
+        cycleStartTime = new Date();
+        updateDisplay(updateNanosecond, 10000); // Start with 10 seconds for nanosecond
+    </script>
+</body>
+</html>
